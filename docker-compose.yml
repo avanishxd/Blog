@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:6
+    container_name: blog_mongo
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - '27017:27017'
+
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: blog_backend
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    environment:
+      - PORT=8000
+      - MONGODB_URI=mongodb://mongo:27017/BLOG
+      - ACCESS_SECRET_KEY=${ACCESS_SECRET_KEY}
+      - REFRESH_SECRET_KEY=${REFRESH_SECRET_KEY}
+    ports:
+      - '8000:8000'
+
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: blog_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - '80:80'
+
+volumes:
+  mongo_data:
